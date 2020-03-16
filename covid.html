@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>MapQuest.js with basic map additions</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+		<script src="https://api.mqcdn.com/sdk/mapquest-js/v1.2.0/mapquest.js"></script>
+		<link type="text/css" rel="stylesheet" href="https://api.mqcdn.com/sdk/mapquest-js/v1.2.0/mapquest.css"/>
+		<script type="text/javascript" src="https://code.jquery.com/jquery-2.2.4.js"></script>
+		<script type="text/javascript">
+			var L, MQ, map;
+			function init() {
+				// create map with tile layer, center, and zoom
+				L.mapquest.key = "KEY";
+				map = L.mapquest.map("map", {
+					layers: L.mapquest.tileLayer("map"),
+					center: [40.731701,-73.993411],
+					zoom: 6
+				});
+				// add simple layer control
+				L.control.layers(
+					{
+						"Map": L.mapquest.tileLayer("map"),
+						"Sat": L.mapquest.tileLayer("satellite")
+					}
+				).addTo(map);
+
+                // data from https://github.com/CSSEGISandData/COVID-19
+                $.get( "https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_daily_reports/03-15-2020.csv", function( data) {
+                    data = data.split("\n");
+                    data.shift(); // remove header row
+                    data.forEach(function (record){
+                        var cells = record.split(",");
+                        if(record.indexOf("\"") > 0) {
+                            // handle records with extra commas
+                        }else{
+                            var poptext = 
+                                (cells[0] ? (cells[0] + ", "):("")) +
+                                cells[1] + "<br/>" +
+                                "Confirmed: " + cells[3] + "<br/>" +
+                                "Deaths: " + cells[4] + "<br/>" +
+                                "Recovered: " + cells[5];
+                            L.circleMarker(
+                                [cells[6],cells[7]],
+                                {
+                                    radius: (cells[3] < 1000 ? cells[3]/20 : 60), 
+                                    color: "red", 
+                                    fillColor: "red", 
+                                    fillOpacity: 0.5
+                                }
+                            ).bindPopup(poptext).addTo(map);
+                        }
+                    });
+                });
+
+
+			}
+		</script>
+		<style>
+			#map {
+				width: 800px;
+				height: 600px;
+			}
+		</style>
+	</head>
+	<body onload='init();'>
+		<div id="map"></div>
+	</body>
+</html>
